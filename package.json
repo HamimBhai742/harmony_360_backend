@@ -1,0 +1,44 @@
+{
+  "name": "harmony360-backend",
+  "version": "1.0.0",
+  "description": "Harmony 360 assessment backend using Node.js, Express, TypeScript, MongoDB, Prisma",
+  "main": "dist/server.js",
+  "scripts": {
+    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "prisma:generate": "prisma generate",
+    "prisma:push": "prisma db push",
+    "seed": "ts-node-dev --transpile-only src/app/utils/seed.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.19.0",
+    "bcryptjs": "latest",
+    "cookie-parser": "latest",
+    "cors": "latest",
+    "dotenv": "latest",
+    "express": "latest",
+    "helmet": "latest",
+    "http-status": "latest",
+    "jsonwebtoken": "latest",
+    "morgan": "latest",
+    "nodemailer": "latest",
+    "pdfkit": "latest",
+    "prisma": "^6.19.0",
+    "puppeteer": "^24.42.0",
+    "zod": "latest"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "latest",
+    "@types/cookie-parser": "latest",
+    "@types/cors": "latest",
+    "@types/express": "latest",
+    "@types/jsonwebtoken": "latest",
+    "@types/morgan": "latest",
+    "@types/node": "latest",
+    "@types/nodemailer": "latest",
+    "@types/pdfkit": "latest",
+    "ts-node-dev": "latest",
+    "typescript": "latest"
+  }
+}

@@ -1,0 +1,144 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+enum AssessmentStatus {
+  STARTED
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum QuestionType {
+  SINGLE_CHOICE
+  MULTI_CHOICE
+  TEXT
+}
+
+model Lead {
+  id             String       @id @default(auto()) @map("_id") @db.ObjectId
+  firstName      String
+  lastName       String
+  email          String
+  companyName    String
+  role           String
+  industry       String?
+  assessmentGoal String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  assessments    Assessment[]
+
+  @@map("leads")
+}
+
+model Dimension {
+  id          String     @id @default(auto()) @map("_id") @db.ObjectId
+  key         String     @unique
+  title       String
+  description String?
+  order       Int        @default(0)
+  questions   Question[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@map("dimensions")
+}
+
+model Question {
+  id          String           @id @default(auto()) @map("_id") @db.ObjectId
+  dimensionId String           @db.ObjectId
+  dimension   Dimension        @relation(fields: [dimensionId], references: [id])
+  title       String
+  type        QuestionType     @default(SINGLE_CHOICE)
+  order       Int
+  options     QuestionOption[]
+  isActive    Boolean          @default(true)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  answers     Answer[]
+
+  @@map("questions")
+}
+
+type QuestionOption {
+  label String
+  value String
+  score Int
+}
+
+model Assessment {
+  id          String            @id @default(auto()) @map("_id") @db.ObjectId
+  leadId      String            @db.ObjectId
+  lead        Lead              @relation(fields: [leadId], references: [id])
+  status      AssessmentStatus  @default(STARTED)
+  answers     Answer[]
+  result      AssessmentResult?
+  startedAt   DateTime          @default(now())
+  completedAt DateTime?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@map("assessments")
+}
+
+model Answer {
+  id            String     @id @default(auto()) @map("_id") @db.ObjectId
+  assessmentId  String     @db.ObjectId
+  assessment    Assessment @relation(fields: [assessmentId], references: [id])
+  questionId    String     @db.ObjectId
+  question      Question   @relation(fields: [questionId], references: [id])
+  selectedValue String
+  selectedLabel String
+  score         Int
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  @@unique([assessmentId, questionId])
+  @@map("answers")
+}
+
+type DimensionScore {
+  key        String
+  title      String
+  rawScore   Int
+  maxScore   Int
+  percentage Int
+}
+
+type BandInsight {
+  min                    Int
+  max                    Int
+  scoreRange             String
+  percentageRange        String
+  diagnosis              String
+  maturityInterpretation String
+  insight                String
+  tension                String
+  bridgeStatement        String
+}
+
+model AssessmentResult {
+  id                  String           @id @default(auto()) @map("_id") @db.ObjectId
+  assessmentId        String           @unique @db.ObjectId
+  assessment          Assessment       @relation(fields: [assessmentId], references: [id])
+  rawTotal            Int
+  maxTotal            Int
+  normalizedScore     Int
+  finalPercentage     Int
+  dimensionScores     DimensionScore[]
+  band                BandInsight
+  primaryTensionTitle String
+  primaryTensionBody  String
+  customerGoalTitle   String?
+  customerGoalBody    String?
+  pdfPath             String?
+  emailedAt           DateTime?
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+
+  @@map("assessment_results")
+}
