@@ -1,30 +1,51 @@
-# Harmony 360 Backend
 
-Backend for a web-based assessment workflow: lead capture, step-by-step questionnaire, custom scoring, result interpretation, PDF report generation, and email delivery.
+## Dependencies
 
-## Stack
-Node.js, Express, TypeScript, MongoDB, Prisma, Zod, PDFKit, Nodemailer.
+The project uses the following dependencies:
+
+- `express`
+- `cors`
+- `helmet`
+- `morgan`
+- `dotenv`
+- `jsonwebtoken`
+- `nodemailer`
+- `pdfkit`
+- `prisma`
+- `zod`
 
 ## Setup
 
-```bash
-npm install
-cp .env.example .env
-npm run prisma:generate
-npm run prisma:push
-npm run seed
-npm run dev
-```
+To run the project locally, follow these steps:
 
-## Main workflow
-1. Frontend calls `GET /api/v1/questions` to load grouped questions.
-2. Frontend calls `POST /api/v1/assessments/start` with lead/contact information.
-3. Frontend calls `POST /api/v1/assessments/:assessmentId/answer` for each answer.
-4. Frontend calls `POST /api/v1/assessments/:assessmentId/complete` when all answers are done.
-5. Backend calculates dimensions, overall score, diagnostic band, tensions, bridge statement/CTA.
-6. Backend stores result, generates PDF, and emails the report to the user.
-7. Frontend can call `GET /api/v1/assessments/:assessmentId/result` to show result page.
-8. Frontend can call `GET /api/v1/reports/:assessmentId/pdf` to download PDF.
+1. Clone the repository
+2. Run `npm install` to install dependencies
+3. Copy `.env.example` to `.env` and update the environment variables
+4. Run `npm run prisma:generate` to generate Prisma client
+5. Run `npm run prisma:push` to push Prisma schema to the database
+6. Run `npm run seed` to seed the database
+7. Run `npm run dev` to start the server
 
-## API base
-`http://localhost:5000/api/v1`
+## API Endpoints
+
+The API endpoints are as follows:
+
+- `GET /api/v1/questions`: Returns a list of grouped questions
+- `POST /api/v1/assessments/start`: Starts a new assessment
+- `POST /api/v1/assessments/:assessmentId/answer`: Saves an answer for an assessment
+- `POST /api/v1/assessments/:assessmentId/complete`: Completes an assessment
+- `GET /api/v1/assessments/:assessmentId/result`: Retrieves the assessment result
+- `GET /api/v1/reports/:assessmentId/pdf`: Downloads the assessment report as a PDF
+
+## Contributing
+
+Contributions are welcome! Please follow these guidelines when contributing:
+
+1. Fork the repository
+2. Create a new branch
+3. Make your changes
+4. Submit a pull request
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
