@@ -1,8 +1,7 @@
 import PDFDocument from "pdfkit";
-import { AssessmentResult, Lead } from "@prisma/client";
 
 export const reportService = {
-  async buildPdfBuffer(lead: Lead, result: AssessmentResult): Promise<Buffer> {
+  async buildPdfBuffer(lead: any, result: any): Promise<Buffer> {
     return new Promise((resolve, reject) => {
       const doc = new PDFDocument({
         margin: 40,

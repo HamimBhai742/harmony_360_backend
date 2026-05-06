@@ -81,7 +81,7 @@ const dimensions = [
   },
 ];
 
-async function main() {
+export async function seedQuestions() {
   await prisma.answer.deleteMany();
   await prisma.assessmentResult.deleteMany();
   await prisma.assessment.deleteMany();
@@ -113,11 +113,3 @@ async function main() {
   console.log('Seed completed successfully.');
 }
 
-main()
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });

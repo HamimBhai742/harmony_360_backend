@@ -1,8 +1,21 @@
-import { Prisma } from "@prisma/client";
 import { prisma } from "../../utils/prisma";
 import { getDiagnosticBand, getPrimaryTension } from "./scoring";
 import { reportService } from "../report/report.service";
 import { emailService } from "../email/email.service";
+
+type AssessmentItem = {
+  category: string;
+  score?: number;
+  value?: number;
+  answer?: string;
+};
+
+type AssessmentAnswer = {
+  question: string;
+  category: string;
+  answer: string;
+  score?: number;
+};
 
 export const assessmentService = {
   async start(payload: {
@@ -33,7 +46,7 @@ export const assessmentService = {
       throw Object.assign(new Error("Question not found"), { statusCode: 404 });
 
     const option = question.options.find(
-      (item) => item.value === payload.selectedValue,
+      (item: any) => item?.value === payload?.selectedValue,
     );
     if (!option)
       throw Object.assign(new Error("Invalid answer option"), {
@@ -114,7 +127,7 @@ export const assessmentService = {
       }
     >();
 
-    assessment.answers.forEach((answer) => {
+    assessment.answers.forEach((answer:any) => {
       const dimension = answer.question.dimension;
 
       const existing = dimensionMap.get(dimension.key) || {
