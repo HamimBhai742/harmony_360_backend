@@ -1,4 +1,5 @@
 import PDFDocument from "pdfkit";
+import path from "path";
 
 export const reportService = {
   async buildPdfBuffer(lead: any, result: any): Promise<Buffer> {
@@ -18,18 +19,25 @@ export const reportService = {
       const band: any = result.band || {};
       const dimensionScores: any[] = (result.dimensionScores as any[]) || [];
 
+      const logoPath = path.join(process.cwd(), "src/assets/harmony-logo.png");
+
       const colors = {
-        primary: "#2563EB",
-        secondary: "#0F172A",
-        accent: "#14B8A6",
+        primary: "#F5A623", // Harmony yellow/orange
+        secondary: "#4B5563", // Harmony logo gray
+        accent: "#E85D2A", // orange/red accent
+        blue: "#2D8FD5", // Harmony logo blue
+
         success: "#22C55E",
-        warning: "#F59E0B",
+        warning: "#F5A623",
         danger: "#EF4444",
+
         text: "#1F2937",
         subText: "#6B7280",
         light: "#F8FAFC",
         border: "#E5E7EB",
-        softBlue: "#EFF6FF",
+
+        softPrimary: "#FFF7E6",
+        softBlue: "#EAF5FC",
         softGreen: "#ECFDF5",
         softAmber: "#FFFBEB",
         softRed: "#FEF2F2",
@@ -55,7 +63,7 @@ export const reportService = {
       const rankColors = [
         colors.danger,
         colors.warning,
-        colors.primary,
+        colors.blue,
         colors.success,
       ];
 
@@ -76,18 +84,19 @@ export const reportService = {
 
       rankedDimensionScores.forEach((score, rank) => {
         dimensionColorMap[score.originalIndex] =
-          rankColors[rank] || colors.primary;
+          rankColors[rank] || colors.blue;
       });
 
       const getBarColor = (index: number) => {
-        return dimensionColorMap[index] || colors.primary;
+        return dimensionColorMap[index] || colors.blue;
       };
 
       const getSoftBgColor = (color: string) => {
         if (color === colors.success) return colors.softGreen;
         if (color === colors.warning) return colors.softAmber;
         if (color === colors.danger) return colors.softRed;
-        return colors.softBlue;
+        if (color === colors.blue) return colors.softBlue;
+        return colors.softPrimary;
       };
 
       // -------------------------
@@ -266,7 +275,7 @@ export const reportService = {
           .font("Helvetica-Bold")
           .fontSize(10.5)
           .fillColor(colors.secondary)
-          .text(label, startX, startY, {
+          .text(label || "N/A", startX, startY, {
             width: 310,
           });
 
@@ -283,7 +292,7 @@ export const reportService = {
           .font("Helvetica-Bold")
           .fontSize(9)
           .fillColor(barColor)
-          .text(`${percentage}%`, 485, startY, {
+          .text(`${percentage || 0}%`, 485, startY, {
             width: 45,
             align: "right",
           });
@@ -333,13 +342,12 @@ export const reportService = {
         // Top color line
         doc.rect(x, y, w, 4).fillColor(color).fill();
 
-        // Header background - reduced height
+        // Header background
         doc
           .rect(x, y + 4, w, 50)
           .fillColor(bgColor)
           .fill();
 
-        // Dimension label
         doc
           .font("Helvetica")
           .fontSize(7.2)
@@ -348,7 +356,6 @@ export const reportService = {
             width: w - 95,
           });
 
-        // Dimension title
         doc
           .font("Helvetica-Bold")
           .fontSize(8.8)
@@ -358,7 +365,6 @@ export const reportService = {
             lineGap: 0,
           });
 
-        // Score right side
         doc
           .font("Helvetica-Bold")
           .fontSize(12.5)
@@ -368,25 +374,26 @@ export const reportService = {
             align: "right",
           });
 
+        const percentage = Number(score.percentage || 0);
+
         const insight =
-          score.percentage >= 80
+          percentage >= 80
             ? "This dimension shows strong alignment and reliable execution across the organization."
-            : score.percentage >= 60
+            : percentage >= 60
               ? "This dimension has a developing foundation, but consistency still needs improvement."
-              : score.percentage >= 40
+              : percentage >= 40
                 ? "This dimension shows visible alignment gaps that may affect customer and employee experience."
                 : "This dimension is currently a critical alignment risk and should be improved first.";
 
         const nextStep =
-          score.percentage >= 80
+          percentage >= 80
             ? "Maintain this strength and use it as a model for other weaker dimensions."
-            : score.percentage >= 60
+            : percentage >= 60
               ? "Improve ownership, communication, and process consistency across teams."
-              : score.percentage >= 40
+              : percentage >= 40
                 ? "Create clearer standards and reinforce expectations with leadership support."
                 : "Prioritize this area immediately and remove blockers affecting execution.";
 
-        // Body insight - moved up
         doc
           .font("Helvetica")
           .fontSize(7.6)
@@ -396,7 +403,6 @@ export const reportService = {
             lineGap: 1,
           });
 
-        // Operational Reality - moved up
         doc
           .font("Helvetica-Bold")
           .fontSize(8)
@@ -408,7 +414,7 @@ export const reportService = {
           .fontSize(7.2)
           .fillColor(colors.text)
           .text(
-            `• Normalized score: ${normalizedScore}/20\n• Alignment percentage: ${score.percentage}%\n• Priority based on relative performance`,
+            `• Normalized score: ${normalizedScore}/20\n• Alignment percentage: ${percentage}%\n• Priority based on relative performance`,
             x + 12,
             y + 122,
             {
@@ -417,7 +423,6 @@ export const reportService = {
             },
           );
 
-        // Next Step - moved up
         doc
           .font("Helvetica-Bold")
           .fontSize(8)
@@ -435,40 +440,55 @@ export const reportService = {
       };
 
       // -------------------------
-      // HEADER
+      // HEADER WITH LOGO
       // -------------------------
-      doc.rect(0, 0, doc.page.width, 110).fill(colors.primary);
+      doc.rect(0, 0, doc.page.width, 120).fill(colors.primary);
+
+      doc.roundedRect(40, 22, 515, 76, 12).fillColor(colors.white).fill();
 
       doc
-        .fillColor(colors.white)
+        .roundedRect(40, 22, 515, 76, 12)
+        .strokeColor("#FDE68A")
+        .lineWidth(1)
+        .stroke();
+
+      try {
+        doc.image(logoPath, 58, 38, {
+          width: 160,
+        });
+      } catch (error) {
+        doc
+          .fillColor(colors.secondary)
+          .font("Helvetica-Bold")
+          .fontSize(20)
+          .text("Harmony 360", 58, 42);
+      }
+
+      doc
+        .fillColor(colors.secondary)
         .font("Helvetica-Bold")
-        .fontSize(24)
-        .text("Harmony 360", 40, 28, {
-          align: "center",
+        .fontSize(18)
+        .text("Brand & Culture Alignment Snapshot", 235, 34, {
+          width: 290,
+          align: "right",
         });
 
-      doc
-        .font("Helvetica")
-        .fontSize(13)
-        .fillColor(colors.white)
-        .text("Brand & Culture Alignment Snapshot", 40, 58, {
-          align: "center",
-        });
 
       doc
         .font("Helvetica")
         .fontSize(9.5)
-        .fillColor("#DBEAFE")
+        .fillColor(colors.subText)
         .text(
           "A structured overview of your organization’s alignment health",
-          40,
+          235,
           80,
           {
-            align: "center",
+            width: 290,
+            align: "right",
           },
         );
 
-      doc.y = 132;
+      doc.y = 145;
 
       // -------------------------
       // LEAD INFO + SCORE CARD
@@ -508,12 +528,12 @@ export const reportService = {
 
       doc
         .roundedRect(385, infoTop, 170, 125, 10)
-        .fillColor(colors.softBlue)
+        .fillColor(colors.softPrimary)
         .fill();
 
       doc
         .roundedRect(385, infoTop, 170, 125, 10)
-        .strokeColor(colors.border)
+        .strokeColor("#FDE68A")
         .lineWidth(1)
         .stroke();
 
@@ -530,7 +550,7 @@ export const reportService = {
         .fillColor(colors.secondary)
         .font("Helvetica-Bold")
         .fontSize(28)
-        .text(`${result.normalizedScore}/80`, 385, infoTop + 40, {
+        .text(`${result.normalizedScore || 0}/80`, 385, infoTop + 40, {
           width: 170,
           align: "center",
         });
@@ -539,10 +559,15 @@ export const reportService = {
         .fillColor(colors.subText)
         .font("Helvetica")
         .fontSize(11)
-        .text(`${result.finalPercentage}% Alignment Score`, 385, infoTop + 78, {
-          width: 170,
-          align: "center",
-        });
+        .text(
+          `${result.finalPercentage || 0}% Alignment Score`,
+          385,
+          infoTop + 78,
+          {
+            width: 170,
+            align: "center",
+          },
+        );
 
       doc
         .fillColor(colors.primary)
@@ -559,7 +584,7 @@ export const reportService = {
       // BAND SUMMARY
       // -------------------------
       doc.y += 30;
-      drawSectionTitle("Band Summary", colors.accent);
+      drawSectionTitle("Band Summary", colors.primary);
 
       ensureSpace(150);
 
@@ -582,7 +607,7 @@ export const reportService = {
         bandY,
         245,
         colors.softBlue,
-        colors.primary,
+        colors.blue,
       );
 
       drawMiniBandCard(
@@ -634,7 +659,7 @@ export const reportService = {
         drawScoreBar(
           score.title,
           `${normalizedScore}/20`,
-          score.percentage,
+          Number(score.percentage || 0),
           index,
         );
       });
@@ -690,11 +715,11 @@ export const reportService = {
       // CUSTOMER GOAL
       // -------------------------
       if (result.customerGoalTitle && result.customerGoalBody) {
-        drawSectionTitle("Goal-Based Insight", colors.primary);
+        drawSectionTitle("Goal-Based Insight", colors.blue);
 
         drawBox(result.customerGoalTitle, result.customerGoalBody, {
           bgColor: colors.softBlue,
-          titleColor: colors.primary,
+          titleColor: colors.blue,
           bodyColor: colors.text,
           borderColor: "#BFDBFE",
         });
@@ -706,10 +731,10 @@ export const reportService = {
       drawSectionTitle("Bridge Statement & Next Step", colors.secondary);
 
       drawBox("Recommended Next Step", band.bridgeStatement || "N/A", {
-        bgColor: colors.softBlue,
+        bgColor: colors.softPrimary,
         titleColor: colors.primary,
         bodyColor: colors.text,
-        borderColor: "#BFDBFE",
+        borderColor: "#FDE68A",
       });
 
       // -------------------------
