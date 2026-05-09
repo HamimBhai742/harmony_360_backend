@@ -13,7 +13,7 @@ const app: Application = express();
 const allowedOrigins = [
   config.clientUrl,
   "http://localhost:3001",
-  "http://10.0.70.135:3000",
+  "http://206.162.244.175:3000",
   "https://harmony-three-blond.vercel.app",
 ].filter(Boolean);
 
