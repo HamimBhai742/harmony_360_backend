@@ -2,6 +2,7 @@ import { prisma } from "../../utils/prisma";
 import { getDiagnosticBand, getPrimaryTension } from "./scoring";
 import { reportService } from "../report/report.service";
 import { emailService } from "../email/email.service";
+import { appendAssessmentToSheet } from "../googleSheet/google.sheet.service";
 
 type AssessmentItem = {
   category: string;
@@ -221,14 +222,31 @@ export const assessmentService = {
       },
     });
 
+    const completedAt = new Date();
+
     await prisma.assessment.update({
       where: {
         id: assessmentId,
       },
       data: {
         status: "COMPLETED",
-        completedAt: new Date(),
+        completedAt,
       },
+    });
+
+    void appendAssessmentToSheet({
+      id: assessment.id,
+      leadId: assessment.leadId,
+      status: "COMPLETED",
+      startedAt: assessment.startedAt,
+      completedAt,
+      createdAt: assessment.createdAt,
+      updatedAt: assessment.updatedAt,
+      lead: assessment.lead,
+      result,
+    }).catch((error: unknown) => {
+      // Do not block the user flow if Sheets is down/misconfigured.
+      console.error("Failed to append assessment to Google Sheet", error);
     });
 
     const pdfBuffer = await reportService.buildPdfBuffer(
@@ -268,6 +286,7 @@ export const assessmentService = {
         answers: { include: { question: true } },
       },
     });
+    
     if (!assessment)
       throw Object.assign(new Error("Assessment not found"), {
         statusCode: 404,
